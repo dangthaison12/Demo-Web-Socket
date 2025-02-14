@@ -1,5 +1,8 @@
-package com.example.messagingstompwebsocket;
+package com.example.messagingstompwebsocket.service;
 
+import com.example.messagingstompwebsocket.model.User;
+import com.example.messagingstompwebsocket.model.UserNotification;
+import com.example.messagingstompwebsocket.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,9 @@ public class UserService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
+    @Autowired
+    private UserNotificationService userNotificationService;
+
     public List<User> getAll(){
         return userRepository.findAll();
     }
@@ -28,10 +34,9 @@ public class UserService {
 
         try {
             UserNotification notification = new UserNotification("CREATE", savedUser);
-
+            userNotificationService.saveNotification(notification);
             // Log chi tiết để debug
             logger.info("Sending WebSocket notification: {}", notification);
-
             messagingTemplate.convertAndSend("/topic/users", notification);
         } catch (Exception e) {
             logger.error("Error sending WebSocket message", e);
@@ -51,6 +56,7 @@ public class UserService {
 
         // Gửi thông báo WebSocket
         UserNotification notification = new UserNotification("UPDATE", updatedUser);
+        userNotificationService.saveNotification(notification);
         messagingTemplate.convertAndSend("/topic/users", notification);
 
         return updatedUser;
@@ -64,6 +70,7 @@ public class UserService {
 
         // Gửi thông báo WebSocket
         UserNotification notification = new UserNotification("DELETE", user);
+        userNotificationService.saveNotification(notification);
         messagingTemplate.convertAndSend("/topic/users", notification);
     }
 }
